@@ -7,6 +7,17 @@ using namespace std;
 
 const int MAXM = 2e3;
 
+class Graph
+{
+private:
+    int n, m;
+    int **capacity;
+    int *par;
+    void bfs(int s, int t);
+public:
+
+};
+
 int n, m;
 int capacity[MAXM][MAXM];
 int par[MAXM];
@@ -61,7 +72,7 @@ int fordFulkerson(int s, int t)
             minFlow = min(minFlow, capacity[u][v]);
         }
 
-        traceBack(minFlow,s, t);
+        traceBack(minFlow, s, t);
 
         for (int v = t; v != s; v = par[v])
         {

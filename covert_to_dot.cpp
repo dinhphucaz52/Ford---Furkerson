@@ -45,6 +45,13 @@ const int MOD = 1e9 + 7;
 
 #define ii pair<int, int>
 
+struct edge
+{
+    int u, v, w;
+};
+
+vector<edge> list;
+
 void solve()
 {
     freopen("data.txt", "r", stdin);
@@ -56,9 +63,11 @@ void solve()
     {
         cin >> u >> v >> w;
         adj[u][v] = {0, w};
+        list.push_back({u, v, w});
     }
     freopen("log.txt", "r", stdin);
-    for (int i = 0; i < 4; i++)
+    int AUGMENTING_PATHS = 4;
+    for (int i = 0; i < AUGMENTING_PATHS; i++)
     {
         int flow;
         cin >> flow;
@@ -74,12 +83,9 @@ void solve()
         for (int i = 1; i < vertices.size(); i++)
             adj[vertices[i-1]][vertices[i]].first += flow;
     }
-    freopen("data.txt", "r", stdin);
-    cin >> n >> m;
-    while (m--)
-    {
-        
-    }
+    freopen("dot.txt", "w", stdout);
+    for (auto [u,v,w]: list)
+        cout << u << " " << v << " " << adj[u][v].first << "," << adj[u][v].second << endl;
 }
 
 signed main()
