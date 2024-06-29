@@ -1,5 +1,6 @@
 #include <iostream>
 #include <queue>
+#include <fstream>
 #include <algorithm>
 #include <stack>
 
@@ -106,7 +107,7 @@ public:
                 int u = par[v];
                 minFlow = min(minFlow, capacity[u][v]);
             }
-            this->traceBack(minFlow, s, t);
+            this->traceBack(minFlow, s, t); // Chi de phuc vu preview do thi
 
             for (int v = t; v != s; v = par[v])
             {
@@ -118,47 +119,71 @@ public:
         }
         return res;
     }
-    void printForDotFile(const int augmentingPathCnt)
+    void printForDotFile(const char *path, const int augmentingPathCnt, bool pre = false)
     {
-        freopen("test.dot", "w", stdout);
-        cout << "/*\n";
+        ofstream ofs;
+        ofs.open(path, ios::out);
+        ofs << "/*\n";
+        int cur = 0;
         vector<vector<int>> adj(this->n, vector<int>(this->n, 0));
         vector<vector<bool>> isColor(this->n, vector<bool>(this->n, 0));
         for (int i = 0; i < this->augmentingPathList.size(); i++)
         {
             AugmentingPath path = this->augmentingPathList[i];
-            cout << path.flow << " : ";
-            cout << path.vertices[0] << " ";
+            if (i + 1 == augmentingPathCnt)
+            {
+                cerr << "Res: " << cur << " + " << " " << this->augmentingPathList[i].flow;
+                cerr << endl;
+            }
+            cur += this->augmentingPathList[i].flow;
+            ofs << path.flow << " : ";
+            ofs << path.vertices[0] << " ";
             for (int j = 1; j < path.vertices.size(); j++)
             {
                 int u = path.vertices[j - 1];
                 int v = path.vertices[j];
-                cout << v << " ";
+                ofs << v << " ";
                 if (i < augmentingPathCnt)
                 {
                     adj[u][v] += path.flow;
                     isColor[u][v] = (i + 1 == augmentingPathCnt);
                 }
             }
-            cout << endl;
+            ofs << endl;
         }
-        cout << "*/\n";
-        cout << "digraph G {" << "\n";
-        cout << "0 [fillcolor = aqua;style = \"filled\";];\n";
-        cout << n - 1 << " [fillcolor = aqua;style = \"filled\";];\n";
+        ofs << "*/\n";
+        ofs << "digraph G {" << "\n";
+        ofs << "0 [fillcolor = aqua;style = \"filled\";];\n";
+        ofs << n - 1 << " [fillcolor = aqua;style = \"filled\";];\n";
         for (auto [u, v, w] : this->edgeList)
         {
             if (augmentingPathCnt)
-                cout << u << " -> " << v << " "
-                     << (isColor[u][v] ? "[color=red]" : "")
-                     << "[label=\"" << adj[u][v]
-                     << "," << w << "\"]\n";
+            {
+                if (isColor[v][u])
+                {
+                    ofs << u << " -> " << v << " "
+                        << (isColor[u][v] && pre ? "[color=red]" : "")
+                        << "[label=\"" << adj[u][v] - this->augmentingPathList[augmentingPathCnt - 1].flow
+                        << "," << w << "\"]\n";
+                    ofs << v << " -> " << u << " "
+                        << "[color= aquamarine]"
+                        << "\n";
+                }
+                else
+                {
+                    ofs << u << " -> " << v << " "
+                        << (isColor[u][v] && pre ? "[color=red]" : "")
+                        << "[label=\"" << adj[u][v]
+                        << "," << w << "\"]\n";
+                }
+            }
             else
-                cout << u << " -> " << v << " "
-                     << "[label=\"" << w << "\"]\n";
+                ofs << u << " -> " << v << " "
+                    << "[label=\"" << w << "\"]\n";
         }
-        cout << "0 -> 4 [style = invis;];\n";
-        cout << "}\n";
+        ofs << "0 -> 4 [style = invis;];\n";
+        ofs << "}\n";
+        ofs.close();
     }
     ~Graph()
     {
@@ -189,9 +214,14 @@ int main()
 
     Graph graph = Graph(n, edgeList);
 
-    graph.fordFulkerson(0, n - 1);
-    // cout << argv[1][0] - '0';
-    graph.printForDotFile(3);
+    cerr << graph.fordFulkerson(0, n - 1) << endl;
+
+    int step = 0;
+    for (step = -1; step < 5; step++)
+    {
+        graph.printForDotFile("dot.dot", step == -1 ? 0 : step);
+        graph.printForDotFile("dot1.dot", step + 1, true);
+    }
     return 0;
 }
 /*
@@ -200,4 +230,14 @@ int main()
 2 : 0 2 3 5
 6 : 0 2 3 4 5
 1 : 0 2 3 1 4 5
+*/
+/*
+Ban đầu truyền từ 0 -> 1 -> 3 -> 5 : 8
+Ta có cạnh reverse 3 -> 1 : 1
+                    8
+Ban đầu truyền từ 0 -> 1 -> 3 -> 5 : 7
+Sẽ được truyền từ 1 -> 4 -> 5 : 1
+
+Còn 1 năng lượng từ 0 -> 2 -> 3 -> 5
+
 */
